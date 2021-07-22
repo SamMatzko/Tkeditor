@@ -1,4 +1,4 @@
-#!/usr/bin/python3
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
 # TKEditor is a basic chess application that uses the Stockfish chess engine.
@@ -21,17 +21,26 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA
 # or see <http://www.gnu.org/licenses/>
 
-"""The main module for TKEditor."""
+"""Create a version of the application ready for unpacking."""
 
-import json
+import os
+import random
+import shutil
+import string
 import sys
 
-import app
-from constants import *
+DIRNAME = ""
 
-appinfo = json.load(open(JSON_APPINFO))
-print("%s %s" % (appinfo["program_name"], appinfo["version"]))
+if "linux" in sys.platform.lower():
 
-if __name__ == "__main__":
-    app = app.App()
-    app.run(sys.argv)
+    APP_DIR = os.path.dirname(__file__)
+    PARENT_DIR = os.path.dirname(APP_DIR) + "/"
+    APP_DIR = APP_DIR + "/"
+    os.system("mkdir %s" % PARENT_DIR + "tkeditor")
+    os.system("cp -r %sTKEditor/* %s/" % (PARENT_DIR, PARENT_DIR + "tkeditor"))
+    shutil.make_archive("%stkeditor" % PARENT_DIR, "zip", "%s%s/tkeditor" % (PARENT_DIR, DIRNAME))
+    shutil.rmtree("%stkeditor" % PARENT_DIR)
+    print("Successfully compressed TKEditor to %s" % ("%stkeditor" % PARENT_DIR))
+
+else:
+    print("Your system is not a Linux. Zip aborted.")

@@ -1,6 +1,3 @@
-#!/usr/bin/python3
-# -*- coding: utf-8 -*-
-
 # TKEditor is a basic chess application that uses the Stockfish chess engine.
 # Copyright (C) 2021  Samuel Matzko
 
@@ -21,17 +18,16 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA
 # or see <http://www.gnu.org/licenses/>
 
-"""The main module for TKEditor."""
+"""Application constants."""
 
-import json
-import sys
+import os
 
-import app
-from constants import *
+# The root path
+ROOT_PATH = os.path.dirname(__file__) + "/"
 
-appinfo = json.load(open(JSON_APPINFO))
-print("%s %s" % (appinfo["program_name"], appinfo["version"]))
+# Json files
+JSON_APPINFO = ROOT_PATH + "data/appinfo.json"
 
-if __name__ == "__main__":
-    app = app.App()
-    app.run(sys.argv)
+# Error messages for handling
+ERROR_CLOSE = """can't invoke "update" command: \
+application has been destroyed"""

@@ -1,0 +1,10 @@
+[Desktop Entry]
+Name=TKEditor
+Comment=TKEditor Desktop
+GenericName=TKEditor Code Editor
+Exec=python3 <EXEC> %U
+Icon=<ICON>
+Type=Application
+Terminal=False
+StartupNotify=True
+Keywords=text editor;python;tkeditor;tkinter;text;open;asdf;files;editor
