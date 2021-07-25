@@ -46,7 +46,7 @@ class _FileDialog(tkinter.Toplevel):
         self.show_hidden_files = showhidden
 
         # What to return when the dialog is closed
-        self.response = None
+        self.response = "duh"
 
         # The currently-selected file
         self.current_file = self.initialdir
@@ -291,7 +291,13 @@ class _FileDialog(tkinter.Toplevel):
     def show(self):
         """Show the dialog."""
         self._show_directory(self.initialdir)
-        self.mainloop()
+        while True:
+            try: self.update()
+            except tkinter.TclError as e:
+                break
+            if self.response != "duh":
+                self.destroy()
+                break
         return self.response, self.current_file
 
 class Open(_FileDialog):
@@ -340,5 +346,5 @@ class SaveAs(_FileDialog):
         )
 
 if __name__ == "__main__":
-    dialog = SaveAs()
+    dialog = Open()
     print(dialog.show())
