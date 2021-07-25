@@ -22,6 +22,7 @@ import time
 import tkinter
 from tkinter.constants import *
 
+import widgets
 from constants import *
 
 class App:
@@ -77,6 +78,61 @@ class AppWindow(tkinter.Tk):
         # Bind all the events
         self.wm_protocol("WM_DELETE_WINDOW", self.close)
 
-    def close(self, *args):
+        # Create the window
+        self.create_window()
+
+        self.wm_geometry("2000x2000")
+
+    def close(self):
         """Close the window."""
         self.app.do_window_close(self)
+
+    def create_menu(self):
+        """Create the window menu and all it's options."""
+
+        self.menubar = tkinter.Menu(self)
+        
+        # The menus
+        self.file_menu = tkinter.Menu(self.menubar, tearoff=False)
+
+        # The file menu's actions
+        self.file_menu.add_command(
+            label="New File...    Ctrl+N",
+            command=self.file_new
+        )
+        self.file_menu.add_command(
+            label="Open File...    Ctrl+O",
+            command=self.file_open
+        )
+        self.file_menu.add_command(
+            label="Save File    Ctrl+S",
+            command=self.file_save
+        )
+
+        self.menubar.add_cascade(label="File", menu=self.file_menu, underline=0)
+        self.config(menu=self.menubar)
+
+    def create_window(self):
+        """Create all the widgets for the window."""
+
+        # Create the menu
+        self.create_menu()
+
+        # The page
+        self.page = widgets.Page(self)
+        self.page.grid(row=0, column=0, sticky=NSEW)
+
+        self.columnconfigure(0, weight=1)
+        self.rowconfigure(0, weight=1)
+
+    def file_new(self, event):
+        """Create a new file."""
+        print("new file")
+
+    def file_open(self, event):
+        """Open an existing file."""
+        print("open file")
+
+    def file_save(self, event):
+        """Save the current file."""
+        print("save file")
