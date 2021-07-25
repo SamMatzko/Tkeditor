@@ -46,7 +46,7 @@ class Page(tkinter.Frame):
         self.yscrollbar.config(command=self.text.yview)
 
         # The line numbers widget
-        self.line_numbers = TextLineNumbers(self, width=20, height=1000)
+        self.line_numbers = TextLineNumbers(self, width=10, height=1000)
         self.line_numbers.grid(row=0, column=0, sticky=W)
         self.line_numbers.attach(self.text)
 
@@ -72,6 +72,12 @@ class Text(tkinter.Text):
 
     def __init__(self, *args, **kwargs):
         kwargs["wrap"] = "none"
+        kwargs["background"] = "#000000"
+        kwargs["foreground"] = "#ffffff"
+        kwargs["insertbackground"] = "#ffffff"
+        kwargs["selectbackground"] = "#ffffff"
+        kwargs["selectforeground"] = "#000000"
+        kwargs["font"] = "LiberationMono 10"
         tkinter.Text.__init__(self, *args, **kwargs)
         self.bind("<Control-o>", self._event_handler)
         

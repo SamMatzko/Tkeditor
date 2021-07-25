@@ -20,6 +20,7 @@
 
 import time
 import tkinter
+import tkinter.filedialog as filedialog
 from tkinter.constants import *
 
 import widgets
@@ -125,13 +126,18 @@ class AppWindow(tkinter.Tk):
         self.columnconfigure(0, weight=1)
         self.rowconfigure(0, weight=1)
 
-    def file_new(self, event):
+        # Set the focus to the text widget
+        self.page.text.focus_set()
+        self.page.line_numbers.redraw()
+
+    def file_new(self):
         """Create a new file."""
         print("new file")
 
     def file_open(self, event):
         """Open an existing file."""
-        print("open file")
+        file = filedialog.Open(self, initialdir="/home/sam/", showhidden=False).show()
+        print(file)
 
     def file_save(self, event):
         """Save the current file."""
