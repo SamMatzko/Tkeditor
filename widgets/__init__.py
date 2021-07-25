@@ -18,6 +18,8 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA
 # or see <http://www.gnu.org/licenses/>
 
+"""Widgets for the application."""
+
 import tkinter
 from tkinter.constants import *
 
