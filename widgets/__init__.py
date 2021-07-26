@@ -20,8 +20,155 @@
 
 """Widgets for the application."""
 
+import os
 import tkinter
+import tkinter.ttk
 from tkinter.constants import *
+
+class _NotebookTab(tkinter.LabelFrame):
+    """The tab widget for the Notebook."""
+
+    def __init__(self, master, child, **kwargs):
+        tkinter.LabelFrame.__init__(self, master, relief=RAISED)
+        self.config(relief=RAISED)
+
+        # The tab label attributes
+        try: self.label_text = kwargs["text"]
+        except:
+            self.label_text = ""
+        try: self.close_command = kwargs["closecommand"]
+        except:
+            pass
+
+        # Our window's child
+        self.child = child
+
+        self.bind("<Button-1>", self.select_command)
+
+        # The label
+        self.label = tkinter.Label(self, text=self.label_text)
+        self.label.bind("<Button-1>", self.select_command)
+        self.label.grid(row=0, column=0, sticky=W)
+
+        # The close button
+        self.close_button = tkinter.Button(
+            self,
+            text="X",
+            relief=FLAT,
+            command=self.close_command
+        )
+        self.close_button.grid(row=0, column=1, sticky=E)
+
+        self.columnconfigure(0, weight=1)
+
+    def bind_close(self, func):
+        """Bind the tab's close to a call of FUNC."""
+        self.bound_close_func = func
+
+    def bind_select(self, func):
+        """Bind the tab's selection to a call of FUNC."""
+        self.bound_select_func = func
+
+    def close_command(self):
+        response = self.bound_close_func(self)
+        if response:
+            self.child.destroy()
+            self.destroy()
+
+    def select_command(self, event=None):
+        self.child.focus_set()
+        self.config(relief=RAISED)
+        self.bound_select_func(self)
+
+    def set_text(self, text):
+        """Set the label to text."""
+        self.label_text = text
+        self.label.config(text=self.label_text)
+
+    # Unbound method placeholders
+    def bound_close_func(self, tab):
+        return True
+
+    def bound_select_func(self, tab):
+        pass
+
+class Notebook(tkinter.Frame):
+    """A custom notebook widget with close buttons, tab scrolling, etc."""
+
+    def __init__(self, *args, **kwargs):
+        tkinter.Frame.__init__(self, *args, **kwargs)
+
+        # The list of tabs. These have their children as built-in variables
+        self.tabs = []
+
+        # The current tab
+        self.current_tab = 0
+
+        # The tabs' text's scrollbar
+        self.scrollbar = tkinter.Scrollbar(self, orient=HORIZONTAL)
+        self.scrollbar.grid(row=1, column=0, sticky=EW)
+
+        # The tabs' text
+        self.tabs_text = tkinter.Text(
+            self,
+            bg="#d9d9d9",
+            height=2,
+            relief=FLAT,
+            cursor="left_ptr",
+            state=DISABLED,
+            wrap=NONE,
+            xscrollcommand=self.scrollbar.set
+        )
+        self.scrollbar.config(command=self.tabs_text.xview)
+        self.tabs_text.grid(row=0, column=0, sticky=N+EW)
+
+        # The frame for the child
+        self.frame = tkinter.Frame(self)
+        self.frame.grid(row=2, column=0, sticky=NSEW)
+
+        self.columnconfigure(0, weight=1)
+        self.rowconfigure(0, weight=0)
+        self.rowconfigure(1, weight=0)
+        self.rowconfigure(2, weight=1)
+
+    def _close_command(self, tab):
+        """Close TAB and remove it's everything."""
+        self.tabs.pop(self.tabs.index(tab))
+        tab.child.pack_forget()
+        tab.child.destroy()
+        if len(self.tabs) != 0:
+            self._select_command(self.tabs[len(self.tabs) - 1])
+        
+        return True
+
+    def _select_command(self, tab):
+        """Select TAB and show it's child."""
+        for other_tab in self.tabs:
+            other_tab.config(relief=SUNKEN)
+            other_tab.child.pack_forget()
+        tab.config(relief=RAISED)
+        tab.child.pack(expand=True, fill=BOTH)
+        self.current_tab = self.tabs.index(tab)
+
+    def add_page(self, child, **kwargs):
+        """Create a new tab with child CHILD."""
+        try: text = kwargs["text"]
+        except:
+            text = ""
+
+        tab = _NotebookTab(self.tabs_text, child, text=text)
+        tab.bind_select(self._select_command)
+        tab.bind_close(self._close_command)
+
+        self.tabs_text.config(state=NORMAL)
+        self.tabs_text.window_create(END, window=tab)
+        self.tabs_text.config(state=DISABLED)
+
+        child.pack(expand=True, fill=BOTH)
+        self.tabs.append(tab)
+        tab.set_text(child.title)
+        self.current_tab = self.tabs.index(tab)
+        self._select_command(tab)
 
 class Page(tkinter.Frame):
     """The frame containing all the text field's widgets."""
@@ -59,6 +206,24 @@ class Page(tkinter.Frame):
         self.text.bind("<KeyPress>", self.on_edit)
         self.text.bind("<<edit>>", self.line_numbers.redraw)
 
+        # The file we currently have open
+        self.file = "Untitled"
+
+        # Our title
+        self.title = os.path.basename(self.file)
+
+    def bind_control_o(self, func):
+        self.text.control_o_func = func
+
+    def load_string(self, string, file):
+        """Load STRING into the text widget."""
+        self.text.delete(1.0, END)
+        self.text.insert(1.0, string)
+        self.line_numbers.redraw()
+        self.file = file
+        self.title = os.path.basename(file)
+        self.set_title(self.title)
+
     def on_edit(self, event):
         self.line_numbers.after(2, self.line_numbers.redraw)
         self.text.event_generate("<<edit>>")
@@ -69,10 +234,27 @@ class Page(tkinter.Frame):
     def on_scroll_release(self, *args):
         self.yscrollbar.unbind("<B1-Motion>", self.line_numbers.redraw)
 
+    # Placeholders for unbound methods
+    def set_title(self, title):
+        pass
+
+class PanedWindow(tkinter.PanedWindow):
+    """A custom PanedWindow widget with a list of Notebook instances."""
+
+    def __init__(self, *args, **kwargs):
+        tkinter.PanedWindow.__init__(self, *args, **kwargs)
+
+        self.notebooks = []
+
+    def add_notebook(self, notebook):
+        """Add a notebook in a new pane."""
+        self.add(notebook) 
+        self.notebooks.append(notebook)
+
 class Text(tkinter.Text):
     """The text widget."""
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, tabwidth=4, **kwargs):
         kwargs["wrap"] = "none"
         kwargs["background"] = "#000000"
         kwargs["foreground"] = "#ffffff"
@@ -81,11 +263,27 @@ class Text(tkinter.Text):
         kwargs["selectforeground"] = "#000000"
         kwargs["font"] = "LiberationMono 10"
         tkinter.Text.__init__(self, *args, **kwargs)
+        self.tabwidth = tabwidth
         self.bind("<Control-o>", self._event_handler)
+        self.bind("<Key-Tab>", self._on_tab)
+        self.bind("<Control-a>", self._select_all)
         
     def _event_handler(self, event):
         """Prevent the widget from creating a new line when Ctrl+O is hit."""
+        self.control_o_func()
         return "break"
+
+    def _on_tab(self, event):
+        self.insert(INSERT, " " * self.tabwidth)
+        return "break"
+
+    def _select_all(self, event):
+        pass
+
+    # Placeholders for unbound methods
+
+    def control_o_func(self, event=None):
+        pass
 
 class TextLineNumbers(tkinter.Canvas):
     """A widget for displaying the text's line numbers."""

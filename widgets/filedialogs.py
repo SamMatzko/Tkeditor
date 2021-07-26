@@ -39,6 +39,7 @@ class _FileDialog(tkinter.Toplevel):
         tkinter.Toplevel.__init__(self, *args, **kwargs)
         self.wm_title(title)
         self.wm_geometry("800x600")
+        self.wm_protocol("WM_DELETE_WINDOW", self._cancel)
 
         self.initialdir = initialdir
         self.askoverwrite = askoverwrite

@@ -20,10 +20,10 @@
 
 import time
 import tkinter
-import tkinter.filedialog as filedialog
 from tkinter.constants import *
 
 import widgets
+import widgets.filedialogs
 from constants import *
 
 class App:
@@ -119,26 +119,49 @@ class AppWindow(tkinter.Tk):
         # Create the menu
         self.create_menu()
 
-        # The page
-        self.page = widgets.Page(self)
-        self.page.grid(row=0, column=0, sticky=NSEW)
+        # The paned window for the notebooks
+        self.paned_window = widgets.PanedWindow(self)
+        self.paned_window.grid(row=0, column=0, sticky=NSEW)
+
+        # The notebooks
+        self.notebooks = [widgets.Notebook(self.paned_window)]
+        for notebook in self.notebooks:
+            self.paned_window.add_notebook(notebook)
+            page = widgets.Page(notebook.frame)
+            page2 = widgets.Page(notebook.frame)
+            notebook.add_page(page, text=page.title)
+            notebook.add_page(page2, text="Hello")
+            # notebook.get_current_page().bind_control_o(self.file_open)
 
         self.columnconfigure(0, weight=1)
         self.rowconfigure(0, weight=1)
 
-        # Set the focus to the text widget
-        self.page.text.focus_set()
-        self.page.line_numbers.redraw()
+        # Bind everything
+        self.bind("<Control-n>", self.file_new)
+        self.bind("<Control-s>", self.file_save)
 
-    def file_new(self):
+    def file_new(self, event=None):
         """Create a new file."""
         print("new file")
+        self.notebooks[0].add_page(widgets.Page())
 
-    def file_open(self, event):
+    def file_open(self, event=None):
         """Open an existing file."""
-        file = filedialog.Open(self, initialdir="/home/sam/", showhidden=False).show()
-        print(file)
+        print("open file")
+        response, file = widgets.filedialogs.Open(self).show()
+        if response:
+            self.load_file(file)
 
-    def file_save(self, event):
+    def file_save(self, event=None):
         """Save the current file."""
         print("save file")
+
+    def load_file(self, file):
+        """Insert the contents of FILE into the text widget."""
+        with open(file) as f:
+            fcontents = f.read()
+            f.close()
+        page = widgets.Page(self.notebooks[0].frame)
+        page.load_string(fcontents, file)
+        page.file = file
+        self.notebooks[0].add_page(page)
