@@ -162,6 +162,13 @@ class Notebook(tkinter.Frame):
         """Scroll the tabs text so that the user can see the last tab."""
         self.tabs_text.see(END)
 
+    def _see_tabs_text_index(self, index=None):
+        """Scroll the tabs text so that the user can see the tab at INDEX.
+        INDEX is set to the current tab if omitted."""
+        if index is None:
+            index = self.current_tab
+        self.tabs_text.see(float("1.%s" % index))
+
     def _select_command(self, tab):
         """Select TAB and show it's child."""
 
@@ -177,6 +184,9 @@ class Notebook(tkinter.Frame):
 
         # Set the focus to this tab's text widget
         tab.child.text.focus_set()
+
+        # Scroll the tabs_text so that we can see the tab
+        self.after(4, self._see_tabs_text_index())
 
     def add_page(self, child, **kwargs):
         """Create a new tab with child CHILD."""
