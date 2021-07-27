@@ -147,8 +147,7 @@ class AppWindow(tkinter.Tk):
         # Get the response from close_tab, and close the tab if it's True
         tab = self.get_current_notebook().get_current_tab()
         if tab is not None:
-            if self.close_tab(tab):
-                self.get_current_notebook()._close_command(tab)
+            self.get_current_notebook()._close_command(tab)
 
     def close_tab(self, tab, actually_close=True):
         """Close the current tab, asking the user if they want to save the file."""

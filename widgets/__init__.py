@@ -175,6 +175,9 @@ class Notebook(tkinter.Frame):
         tab.child.pack(expand=True, fill=BOTH)
         self.current_tab = self.tabs.index(tab)
 
+        # Set the focus to this tab's text widget
+        tab.child.text.focus_set()
+
     def add_page(self, child, **kwargs):
         """Create a new tab with child CHILD."""
         try: text = kwargs["text"]
@@ -194,6 +197,8 @@ class Notebook(tkinter.Frame):
         # Add the tab's child to the window as the currently open page
         child.pack(expand=True, fill=BOTH)
         child.bind_control_o(self.bound_control_o_func)
+        child.text.bind_control_shift_left(self.tab_previous)
+        child.text.bind_control_shift_right(self.tab_next)
 
         # Add the tab to our list, configure it, and select it
         self.tabs.append(tab)
@@ -231,6 +236,22 @@ class Notebook(tkinter.Frame):
     def remove_tab(self, tab):
         """Remove the tab TAB."""
         self._close_command(tab)
+
+    def tab_next(self, event=None):
+        """Switch to the next tab."""
+        if len(self.tabs) > 1:
+            try:
+                self._select_command(self.tabs[self.current_tab + 1])
+            except IndexError:
+                self._select_command(self.tabs[0])
+
+    def tab_previous(self, event=None):
+        """Switch to the previous tab."""
+        if len(self.tabs) > 1:
+            try:
+                self._select_command(self.tabs[self.current_tab - 1])
+            except IndexError:
+                self._select_command(len(self.tabs) - 1)
 
     # Placeholders for unbound methods
     def close_func(self, tab):
@@ -369,6 +390,16 @@ class Text(tkinter.Text):
         self.bind("<Control-o>", self._event_handler)
         self.bind("<Key-Tab>", self._on_tab)
         self.bind("<Control-a>", self._select_all)
+        self.bind("<Control-Shift-Left>", self._ctrl_shift_left)
+        self.bind("<Control-Shift-Right>", self._ctrl_shift_right)
+    
+    def _ctrl_shift_left(self, event=None):
+        self.control_shift_left_func()
+        return "break"
+
+    def _ctrl_shift_right(self, event=None):
+        self.control_shift_right_func()
+        return "break"
         
     def _event_handler(self, event):
         """Prevent the widget from creating a new line when Ctrl+O is hit."""
@@ -386,6 +417,14 @@ class Text(tkinter.Text):
         """Bind \<Control-o\> to a call of FUNC."""
         self.control_o_func = func
 
+    def bind_control_shift_left(self, func):
+        """Bind \<Control-Shift-Left\> to a call of FUNC."""
+        self.control_shift_left_func = func
+
+    def bind_control_shift_right(self, func):
+        """Bind \<Control-Shift-Right\> to a call of FUNC."""
+        self.control_shift_right_func = func
+
     def get_all(self):
         """Return all our text."""
         return self.get(1.0, END)
@@ -393,6 +432,12 @@ class Text(tkinter.Text):
     # Placeholders for unbound methods
 
     def control_o_func(self, event=None):
+        pass
+
+    def control_shift_left_func(self, event=None):
+        pass
+    
+    def control_shift_right_func(self, event=None):
         pass
 
 class TextLineNumbers(tkinter.Canvas):
