@@ -1,4 +1,4 @@
-# TKEditor is a basic chess application that uses the Stockfish chess engine.
+# TKEditor is a basic Python IDE
 # Copyright (C) 2021  Samuel Matzko
 
 # This file is part of TKEditor.
@@ -29,8 +29,8 @@ class _NotebookTab(tkinter.LabelFrame):
     """The tab widget for the Notebook."""
 
     def __init__(self, master, child, **kwargs):
-        tkinter.LabelFrame.__init__(self, master, relief=RAISED)
-        self.config(relief=RAISED)
+        tkinter.LabelFrame.__init__(self, master, relief=FLAT)
+        self.config(relief=FLAT)
 
         # The tab label attributes
         try: self.label_text = kwargs["text"]
@@ -77,7 +77,7 @@ class _NotebookTab(tkinter.LabelFrame):
 
     def select_command(self, event=None):
         self.child.focus_set()
-        self.config(relief=RAISED)
+        self.config(relief=FLAT)
         self.bound_select_func(self)
 
     def set_text(self, text):
@@ -107,6 +107,10 @@ class Notebook(tkinter.Frame):
         # The tabs' text's scrollbar
         self.scrollbar = tkinter.Scrollbar(self, orient=HORIZONTAL)
         self.scrollbar.grid(row=1, column=0, sticky=EW)
+
+        # Functions to call at tab closing and <Control-o>
+        self.bound_close_func = self.close_func
+        self.bound_control_o_func = self.control_o_func
 
         # The tabs' text
         self.tabs_text = tkinter.Text(
@@ -148,7 +152,7 @@ class Notebook(tkinter.Frame):
         for other_tab in self.tabs:
             other_tab.config(relief=SUNKEN)
             other_tab.child.pack_forget()
-        tab.config(relief=RAISED)
+        tab.config(relief=FLAT)
         tab.child.pack(expand=True, fill=BOTH)
         self.current_tab = self.tabs.index(tab)
 
@@ -167,6 +171,7 @@ class Notebook(tkinter.Frame):
         self.tabs_text.config(state=DISABLED)
 
         child.pack(expand=True, fill=BOTH)
+        child.bind_control_o(self.bound_control_o_func)
         self.tabs.append(tab)
         tab.set_text(child.title)
         self.current_tab = self.tabs.index(tab)
@@ -175,6 +180,13 @@ class Notebook(tkinter.Frame):
     def bind_close(self, func):
         """Bind the close of a tab to a call of FUNC."""
         self.bound_close_func = func
+
+    def bind_control_o(self, func):
+        """Bind \<Control-o\> to a call of FUNC, and keep the Text instances from 
+        creating newlines."""
+        self.bound_control_o_func = func
+        for tab in self.tabs:
+            tab.child.bind_control_o(func)
 
     def get_current_page(self):
         """Return the child of the currently selected tab."""
@@ -189,8 +201,11 @@ class Notebook(tkinter.Frame):
         self._close_command(tab)
 
     # Placeholders for unbound methods
-    def bound_close_func(self, tab):
+    def close_func(self, tab):
         return True
+
+    def control_o_func(self):
+        return "break"
 
 class Page(tkinter.Frame):
     """The frame containing all the text field's widgets."""
@@ -226,6 +241,8 @@ class Page(tkinter.Frame):
 
         self.text.bind("<ButtonPress>", self.on_edit)
         self.text.bind("<KeyPress>", self.on_edit)
+        self.text.bind("<Control-z>", self.undo)
+        self.text.bind("<Control-Z>", self.redo)
         self.text.bind("<<edit>>", self.line_numbers.redraw)
 
         # The file we currently have open
@@ -235,12 +252,13 @@ class Page(tkinter.Frame):
         self.title = os.path.basename(self.file)
 
     def bind_control_o(self, func):
-        self.text.control_o_func = func
+        self.text.bind_control_o(func)
 
     def load_string(self, string, file):
         """Load STRING into the text widget."""
         self.text.delete(1.0, END)
         self.text.insert(1.0, string)
+        self.text.edit_reset()
         self.line_numbers.redraw()
         self.file = file
         self.title = os.path.basename(file)
@@ -255,6 +273,24 @@ class Page(tkinter.Frame):
 
     def on_scroll_release(self, *args):
         self.yscrollbar.unbind("<B1-Motion>", self.line_numbers.redraw)
+
+    def redo(self, event=None):
+        """Redo the last undone action."""
+        try:
+            self.text.edit_redo()
+        except tkinter.TclError:
+            pass
+        self.after(2, self.line_numbers.redraw())
+        return "break"
+
+    def undo(self, event=None):
+        """Undo the last action."""
+        try:
+            self.text.edit_undo()
+        except tkinter.TclError:
+            pass
+        self.after(2, self.line_numbers.redraw())
+        return "break"
 
     # Placeholders for unbound methods
     def set_title(self, title):
@@ -284,6 +320,7 @@ class Text(tkinter.Text):
         kwargs["selectbackground"] = "#ffffff"
         kwargs["selectforeground"] = "#000000"
         kwargs["font"] = "LiberationMono 10"
+        kwargs["undo"] = True
         tkinter.Text.__init__(self, *args, **kwargs)
         self.tabwidth = tabwidth
         self.bind("<Control-o>", self._event_handler)
@@ -301,6 +338,10 @@ class Text(tkinter.Text):
 
     def _select_all(self, event):
         pass
+
+    def bind_control_o(self, func):
+        """Bind \<Control-o\> to a call of FUNC."""
+        self.control_o_func = func
 
     # Placeholders for unbound methods
 

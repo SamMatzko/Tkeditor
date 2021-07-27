@@ -1,4 +1,4 @@
-# TKEditor is a basic chess application that uses the Stockfish chess engine.
+# TKEditor is a basic Python IDE
 # Copyright (C) 2021  Samuel Matzko
 
 # This file is part of TKEditor.
@@ -17,7 +17,6 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA
 # or see <http://www.gnu.org/licenses/>
-
 """Application constants."""
 
 import os

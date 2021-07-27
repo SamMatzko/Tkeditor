@@ -1,4 +1,4 @@
-# TKEditor is a basic chess application that uses the Stockfish chess engine.
+# TKEditor is a basic Python IDE
 # Copyright (C) 2021  Samuel Matzko
 
 # This file is part of TKEditor.
@@ -79,10 +79,38 @@ class AppWindow(tkinter.Tk):
         # Bind all the events
         self.wm_protocol("WM_DELETE_WINDOW", self.close)
 
+        # The menus
+        self.menus = (
+            ("_File",
+                (   # Label, event, accelerator label, accelerator
+                    ("_New File", "<<new-file>>", "Ctrl+N", "<Control-n>"),
+                    ("_Open File", "<<open-file>>", "Ctrl+O", "<Control-o>"),
+                    ("_Save File", "<<save-file>>", "Ctrl+S", "<Control-s>"),
+                    ("Save File _As", "<<save-file-as>>", "Ctrl+Shift+Z", "<Control-S>"),
+                    None,
+                    ("_Quit", "<<quit>>", "Ctrl+Q", "<Control-q>")
+                )
+            ),
+            ("_Edit",
+                (
+                    ("_Undo", "<<undo-action>>", "Ctrl+Z", "<Control-z>"),
+                    ("_Redo", "<<redo-action>>", "Control+Shift+Z", "<Control-Z>")
+                )
+            )
+        )
+
         # Create the window
         self.create_window()
 
         self.wm_geometry("2000x2000")
+
+    def action_undo(self):
+        """Undo the last action."""
+        self.get_current_notebook().get_current_page.undo()
+    
+    def action_redo(self):
+        """Redo the last undone action."""
+        self.get_current_notebook().get_current_page.redo()
 
     def check_file_saved(self, page):
         """Check the file status for the given page."""
@@ -97,7 +125,7 @@ class AppWindow(tkinter.Tk):
         else:
             return None
 
-    def close(self):
+    def close(self, event=None):
         """Close the window."""
         for tab in self.get_current_notebook().tabs:
             self.close_tab(tab, False)
@@ -133,24 +161,30 @@ class AppWindow(tkinter.Tk):
 
         self.menubar = tkinter.Menu(self)
         
-        # The menus
-        self.file_menu = tkinter.Menu(self.menubar, tearoff=False)
+        # Go through the menu tuples and add the menus.
+        for m in self.menus:
+            menu = tkinter.Menu(self, tearoff=False)
+            for menuitem in m[1]:
+                if menuitem is None:
+                    menu.add_separator()
+                else:
+                    def command(event=None, eventname=menuitem[1]):
+                        self.event_generate(eventname)
+                    self.bind(menuitem[3], command)
+                    menuitemlabel = menuitem[0].replace("_", "")
+                    menu.add_command(
+                        label=menuitemlabel,
+                        command=command,
+                        underline=menuitem[0].index("_"),
+                        accelerator=menuitem[2]
+                    )
+            menulabel = m[0].replace("_", "")
+            self.menubar.add_cascade(
+                label=menulabel,
+                menu=menu,
+                underline=m[0].index("_")
+            )
 
-        # The file menu's actions
-        self.file_menu.add_command(
-            label="New File...    Ctrl+N",
-            command=self.file_new
-        )
-        self.file_menu.add_command(
-            label="Open File...    Ctrl+O",
-            command=self.file_open
-        )
-        self.file_menu.add_command(
-            label="Save File    Ctrl+S",
-            command=self.file_save
-        )
-
-        self.menubar.add_cascade(label="File", menu=self.file_menu, underline=0)
         self.config(menu=self.menubar)
 
     def create_window(self):
@@ -172,14 +206,17 @@ class AppWindow(tkinter.Tk):
             notebook.add_page(page, text=page.title)
             notebook.add_page(page2, text="Hello")
             notebook.bind_close(self.close_tab)
-            notebook.get_current_page().bind_control_o(self.file_open)
+            notebook.bind_control_o(self.file_open)
 
         self.columnconfigure(0, weight=1)
         self.rowconfigure(0, weight=1)
 
         # Bind everything
-        self.bind("<Control-n>", self.file_new)
-        self.bind("<Control-s>", self.file_save)
+        self.bind("<<new-file>>", self.file_new)
+        self.bind("<<open-file>>", self.file_open)
+        self.bind("<<save-file>>", self.file_save)
+        self.bind("<<save-file-as>>", self.file_save_as)
+        self.bind("<<quit>>", self.close)
 
     def file_new(self, event=None):
         """Create a new file."""
@@ -220,7 +257,6 @@ class AppWindow(tkinter.Tk):
         page = widgets.Page(self.get_current_notebook().frame)
         page.load_string(fcontents, file)
         page.file = file
-        page.bind_control_o(self.file_open)
         self.get_current_notebook().add_page(page)
 
     def save_file(self, tab, file):
