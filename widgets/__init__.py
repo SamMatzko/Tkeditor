@@ -133,11 +133,13 @@ class Notebook(tkinter.Frame):
 
     def _close_command(self, tab):
         """Close TAB and remove it's everything."""
-        self.tabs.pop(self.tabs.index(tab))
-        tab.child.pack_forget()
-        tab.child.destroy()
-        if len(self.tabs) != 0:
-            self._select_command(self.tabs[len(self.tabs) - 1])
+        response = self.bound_close_func(tab)
+        if response:
+            self.tabs.pop(self.tabs.index(tab))
+            tab.child.pack_forget()
+            tab.child.destroy()
+            if len(self.tabs) != 0:
+                self._select_command(self.tabs[len(self.tabs) - 1])
         
         return True
 
@@ -169,6 +171,26 @@ class Notebook(tkinter.Frame):
         tab.set_text(child.title)
         self.current_tab = self.tabs.index(tab)
         self._select_command(tab)
+
+    def bind_close(self, func):
+        """Bind the close of a tab to a call of FUNC."""
+        self.bound_close_func = func
+
+    def get_current_page(self):
+        """Return the child of the currently selected tab."""
+        return self.get_current_tab().child
+
+    def get_current_tab(self):
+        """Return the currently selected tab."""
+        return self.tabs[self.current_tab]
+
+    def remove_tab(self, tab):
+        """Remove the tab TAB."""
+        self._close_command(tab)
+
+    # Placeholders for unbound methods
+    def bound_close_func(self, tab):
+        return True
 
 class Page(tkinter.Frame):
     """The frame containing all the text field's widgets."""

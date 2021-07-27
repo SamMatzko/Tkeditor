@@ -84,9 +84,49 @@ class AppWindow(tkinter.Tk):
 
         self.wm_geometry("2000x2000")
 
+    def check_file_saved(self, page):
+        """Check the file status for the given page."""
+        if os.path.exists(page.file):
+            with open(page.file) as f:
+                fcontents = f.read()
+                f.close()
+            if fcontents.strip() != page.text.get(1.0, page.text.index(END)).strip():
+                return False
+            else:
+                return True
+        else:
+            return None
+
     def close(self):
         """Close the window."""
+        for tab in self.get_current_notebook().tabs:
+            self.close_tab(tab, False)
         self.app.do_window_close(self)
+
+    def close_tab(self, tab, actually_close=True):
+        """Close the current tab, asking the user if they want to save the file."""
+        file_saved = self.check_file_saved(tab.child)
+        if file_saved is False:
+            response = tkinter.messagebox.askyesno(
+                "Save file?", 
+                'File "%s" has not been saved. Save?' % tab.child.title,
+                parent=self
+            )
+            if response:
+                self.file_save()
+        elif file_saved is None:
+            response = tkinter.messagebox.askyesno(
+                "Save file?", 
+                'File "%s" has not been saved. Save?' % tab.child.title,
+                parent=self
+            )
+            if response:
+                self.file_save_as()
+
+        if actually_close:
+            return True
+        else:
+            return False
 
     def create_menu(self):
         """Create the window menu and all it's options."""
@@ -131,7 +171,8 @@ class AppWindow(tkinter.Tk):
             page2 = widgets.Page(notebook.frame)
             notebook.add_page(page, text=page.title)
             notebook.add_page(page2, text="Hello")
-            # notebook.get_current_page().bind_control_o(self.file_open)
+            notebook.bind_close(self.close_tab)
+            notebook.get_current_page().bind_control_o(self.file_open)
 
         self.columnconfigure(0, weight=1)
         self.rowconfigure(0, weight=1)
@@ -142,26 +183,50 @@ class AppWindow(tkinter.Tk):
 
     def file_new(self, event=None):
         """Create a new file."""
-        print("new file")
-        self.notebooks[0].add_page(widgets.Page())
+        self.get_current_notebook().add_page(widgets.Page(self.get_current_notebook().frame))
 
     def file_open(self, event=None):
         """Open an existing file."""
-        print("open file")
         response, file = widgets.filedialogs.Open(self).show()
         if response:
             self.load_file(file)
 
     def file_save(self, event=None):
         """Save the current file."""
-        print("save file")
+        tab = self.get_current_notebook().get_current_tab()
+        page = self.get_current_notebook().get_current_page()
+        if not os.path.exists(page.file): 
+            response, file = widgets.filedialogs.Save(self).show()
+            if response:
+                self.save_file(tab, file)
+        else:
+            self.save_file(tab, file)
+
+    def file_save_as(self, event=None):
+        """Save the current file under a different name."""
+        response, file = widgets.filedialogs.SaveAs(self).show()
+        if response:
+            tab = self.get_current_notebook().get_current_tab()
+            self.save_file(tab, file)
+
+    def get_current_notebook(self):
+        return self.notebooks[0]
 
     def load_file(self, file):
         """Insert the contents of FILE into the text widget."""
         with open(file) as f:
             fcontents = f.read()
             f.close()
-        page = widgets.Page(self.notebooks[0].frame)
+        page = widgets.Page(self.get_current_notebook().frame)
         page.load_string(fcontents, file)
         page.file = file
-        self.notebooks[0].add_page(page)
+        page.bind_control_o(self.file_open)
+        self.get_current_notebook().add_page(page)
+
+    def save_file(self, tab, file):
+        """Save the contents of TAB's Text instance to FILE."""
+        with open(file, "w") as f:
+            f.write(tab.child.text.get(1.0, END))
+            f.close()
+        tab.file = file
+        tab.set_text(os.path.basename(file))
