@@ -202,6 +202,9 @@ class Notebook(tkinter.Frame):
         self._select_command(tab)
         self.after(2, self._see_tabs_text_end)
 
+        # Focus the text widget so the user can instantly start typing
+        child.text.focus_set()
+
     def bind_close(self, func):
         """Bind the close of a tab to a call of FUNC."""
         self.bound_close_func = func
