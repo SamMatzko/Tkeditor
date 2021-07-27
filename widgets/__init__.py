@@ -29,8 +29,8 @@ class _NotebookTab(tkinter.LabelFrame):
     """The tab widget for the Notebook."""
 
     def __init__(self, master, child, **kwargs):
-        tkinter.LabelFrame.__init__(self, master, relief=FLAT)
-        self.config(relief=FLAT)
+        tkinter.LabelFrame.__init__(self, master, relief=SUNKEN)
+        self.config(relief=SUNKEN)
 
         # The tab label attributes
         try: self.label_text = kwargs["text"]
@@ -77,7 +77,7 @@ class _NotebookTab(tkinter.LabelFrame):
 
     def select_command(self, event=None):
         self.child.focus_set()
-        self.config(relief=FLAT)
+        self.config(relief=SUNKEN)
         self.bound_select_func(self)
 
     def set_text(self, text):
@@ -142,17 +142,22 @@ class Notebook(tkinter.Frame):
             self.tabs.pop(self.tabs.index(tab))
             tab.child.pack_forget()
             tab.child.destroy()
+            tab.destroy()
             if len(self.tabs) != 0:
                 self._select_command(self.tabs[len(self.tabs) - 1])
         
         return True
 
+    def _see_tabs_text_end(self):
+        """Scroll the tabs text so that the user can see the last tab."""
+        self.tabs_text.see(END)
+
     def _select_command(self, tab):
         """Select TAB and show it's child."""
         for other_tab in self.tabs:
-            other_tab.config(relief=SUNKEN)
+            other_tab.config(relief=FLAT)
             other_tab.child.pack_forget()
-        tab.config(relief=FLAT)
+        tab.config(relief=SUNKEN)
         tab.child.pack(expand=True, fill=BOTH)
         self.current_tab = self.tabs.index(tab)
 
@@ -176,6 +181,7 @@ class Notebook(tkinter.Frame):
         tab.set_text(child.title)
         self.current_tab = self.tabs.index(tab)
         self._select_command(tab)
+        self.after(2, self._see_tabs_text_end)
 
     def bind_close(self, func):
         """Bind the close of a tab to a call of FUNC."""
@@ -194,7 +200,9 @@ class Notebook(tkinter.Frame):
 
     def get_current_tab(self):
         """Return the currently selected tab."""
-        return self.tabs[self.current_tab]
+        try: return self.tabs[self.current_tab]
+        except IndexError:
+            return None
 
     def remove_tab(self, tab):
         """Remove the tab TAB."""
@@ -342,6 +350,10 @@ class Text(tkinter.Text):
     def bind_control_o(self, func):
         """Bind \<Control-o\> to a call of FUNC."""
         self.control_o_func = func
+
+    def get_all(self):
+        """Return all our text."""
+        return self.get(1.0, END)
 
     # Placeholders for unbound methods
 

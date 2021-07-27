@@ -88,6 +88,8 @@ class AppWindow(tkinter.Tk):
                     ("_Save File", "<<save-file>>", "Ctrl+S", "<Control-s>"),
                     ("Save File _As", "<<save-file-as>>", "Ctrl+Shift+Z", "<Control-S>"),
                     None,
+                    ("Close Current _Tab", "<<tab-close>>", "Ctrl+W", "<Control-w>"),
+                    None,
                     ("_Quit", "<<quit>>", "Ctrl+Q", "<Control-q>")
                 )
             ),
@@ -114,42 +116,65 @@ class AppWindow(tkinter.Tk):
 
     def check_file_saved(self, page):
         """Check the file status for the given page."""
+
+        # Compare the page's file with the text and return True if they match
         if os.path.exists(page.file):
             with open(page.file) as f:
                 fcontents = f.read()
                 f.close()
-            if fcontents.strip() != page.text.get(1.0, page.text.index(END)).strip():
+            if fcontents.strip() != page.text.get_all().strip():
                 return False
             else:
                 return True
         else:
             return None
 
+    def check_file_empty_untitled(self, page):
+        """Return True if PAGE's file is "Untitled" and if it is empty."""
+        if page.title == "Untitled":
+            if page.text.get_all() == "\n" or page.text.get_all() == "":
+                return True
+
     def close(self, event=None):
         """Close the window."""
         for tab in self.get_current_notebook().tabs:
-            self.close_tab(tab, False)
+            self.close_tab(tab=tab, actually_close=False)
         self.app.do_window_close(self)
+
+    def close_current_tab(self, event=None):
+        """Close the current tab."""
+        
+        # Get the response from close_tab, and close the tab if it's True
+        tab = self.get_current_notebook().get_current_tab()
+        if tab is not None:
+            if self.close_tab(tab):
+                self.get_current_notebook()._close_command(tab)
 
     def close_tab(self, tab, actually_close=True):
         """Close the current tab, asking the user if they want to save the file."""
-        file_saved = self.check_file_saved(tab.child)
-        if file_saved is False:
-            response = tkinter.messagebox.askyesno(
-                "Save file?", 
-                'File "%s" has not been saved. Save?' % tab.child.title,
-                parent=self
-            )
-            if response:
-                self.file_save()
-        elif file_saved is None:
-            response = tkinter.messagebox.askyesno(
-                "Save file?", 
-                'File "%s" has not been saved. Save?' % tab.child.title,
-                parent=self
-            )
-            if response:
-                self.file_save_as()
+        
+        # Check first if the file is an "Untitled" and if it is emtpy, do not
+        # ask to save it
+        if not self.check_file_empty_untitled(tab.child):
+
+            # If the file is not saved, ask the user if they want to save it
+            file_saved = self.check_file_saved(tab.child)
+            if file_saved is False:
+                response = tkinter.messagebox.askyesno(
+                    "Save file?", 
+                    'File "%s" has not been saved. Save?' % tab.child.title,
+                    parent=self
+                )
+                if response:
+                    self.file_save()
+            elif file_saved is None:
+                response = tkinter.messagebox.askyesno(
+                    "Save file?", 
+                    'File "%s" has not been saved. Save?' % tab.child.title,
+                    parent=self
+                )
+                if response:
+                    self.file_save_as()
 
         if actually_close:
             return True
@@ -201,10 +226,6 @@ class AppWindow(tkinter.Tk):
         self.notebooks = [widgets.Notebook(self.paned_window)]
         for notebook in self.notebooks:
             self.paned_window.add_notebook(notebook)
-            page = widgets.Page(notebook.frame)
-            page2 = widgets.Page(notebook.frame)
-            notebook.add_page(page, text=page.title)
-            notebook.add_page(page2, text="Hello")
             notebook.bind_close(self.close_tab)
             notebook.bind_control_o(self.file_open)
 
@@ -218,6 +239,7 @@ class AppWindow(tkinter.Tk):
         self.bind("<<save-file-as>>", self.file_save_as)
         self.bind("<<undo-action>>", self.action_undo)
         self.bind("<<redo-action>>", self.action_redo)
+        self.bind("<<tab-close>>", self.close_current_tab)
         self.bind("<<quit>>", self.close)
 
     def file_new(self, event=None):
