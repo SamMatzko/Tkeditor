@@ -104,13 +104,13 @@ class AppWindow(tkinter.Tk):
 
         self.wm_geometry("2000x2000")
 
-    def action_undo(self):
+    def action_undo(self, event=None):
         """Undo the last action."""
-        self.get_current_notebook().get_current_page.undo()
+        self.get_current_notebook().get_current_page().undo()
     
-    def action_redo(self):
+    def action_redo(self, event=None):
         """Redo the last undone action."""
-        self.get_current_notebook().get_current_page.redo()
+        self.get_current_notebook().get_current_page().redo()
 
     def check_file_saved(self, page):
         """Check the file status for the given page."""
@@ -216,6 +216,8 @@ class AppWindow(tkinter.Tk):
         self.bind("<<open-file>>", self.file_open)
         self.bind("<<save-file>>", self.file_save)
         self.bind("<<save-file-as>>", self.file_save_as)
+        self.bind("<<undo-action>>", self.action_undo)
+        self.bind("<<redo-action>>", self.action_redo)
         self.bind("<<quit>>", self.close)
 
     def file_new(self, event=None):
