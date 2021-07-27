@@ -70,12 +70,14 @@ class _NotebookTab(tkinter.LabelFrame):
         self.bound_select_func = func
 
     def close_command(self):
+        """Close us."""
         response = self.bound_close_func(self)
         if response:
             self.child.destroy()
             self.destroy()
 
     def select_command(self, event=None):
+        """Select us."""
         self.child.focus_set()
         self.config(relief=SUNKEN)
         self.bound_select_func(self)
@@ -137,12 +139,20 @@ class Notebook(tkinter.Frame):
 
     def _close_command(self, tab):
         """Close TAB and remove it's everything."""
+
+        # Get the OK from our bound_close_func before closing
         response = self.bound_close_func(tab)
         if response:
+
+            # Remove TAB from the list of tabs
             self.tabs.pop(self.tabs.index(tab))
+
+            # Remove all the tab's widgets, including itself
             tab.child.pack_forget()
             tab.child.destroy()
             tab.destroy()
+
+            # Select the previous tab, if there is one
             if len(self.tabs) != 0:
                 self._select_command(self.tabs[len(self.tabs) - 1])
         
@@ -154,9 +164,13 @@ class Notebook(tkinter.Frame):
 
     def _select_command(self, tab):
         """Select TAB and show it's child."""
+
+        # Deselect all the other tabs and hide their children
         for other_tab in self.tabs:
             other_tab.config(relief=FLAT)
             other_tab.child.pack_forget()
+
+        # Select this tab
         tab.config(relief=SUNKEN)
         tab.child.pack(expand=True, fill=BOTH)
         self.current_tab = self.tabs.index(tab)
@@ -167,16 +181,21 @@ class Notebook(tkinter.Frame):
         except:
             text = ""
 
+        # Create a new tab widget
         tab = _NotebookTab(self.tabs_text, child, text=text)
         tab.bind_select(self._select_command)
         tab.bind_close(self._close_command)
 
+        # Add the tab wiget to the text
         self.tabs_text.config(state=NORMAL)
         self.tabs_text.window_create(END, window=tab)
         self.tabs_text.config(state=DISABLED)
 
+        # Add the tab's child to the window as the currently open page
         child.pack(expand=True, fill=BOTH)
         child.bind_control_o(self.bound_control_o_func)
+
+        # Add the tab to our list, configure it, and select it
         self.tabs.append(tab)
         tab.set_text(child.title)
         self.current_tab = self.tabs.index(tab)
@@ -191,6 +210,8 @@ class Notebook(tkinter.Frame):
         """Bind \<Control-o\> to a call of FUNC, and keep the Text instances from 
         creating newlines."""
         self.bound_control_o_func = func
+
+        # We bind all the tabs
         for tab in self.tabs:
             tab.child.bind_control_o(func)
 
@@ -247,6 +268,7 @@ class Page(tkinter.Frame):
         self.columnconfigure(1, weight=1)
         self.rowconfigure(0, weight=1)
 
+        # Bind the events
         self.text.bind("<ButtonPress>", self.on_edit)
         self.text.bind("<KeyPress>", self.on_edit)
         self.text.bind("<Control-z>", self.undo)
@@ -264,10 +286,16 @@ class Page(tkinter.Frame):
 
     def load_string(self, string, file):
         """Load STRING into the text widget."""
+
+        # Clear the old text and insert the new text
         self.text.delete(1.0, END)
         self.text.insert(1.0, string)
+
+        # Reset the undo stack and redraw the line numbers
         self.text.edit_reset()
         self.line_numbers.redraw()
+
+        # Set our file to be the currently open file, and set the title as such
         self.file = file
         self.title = os.path.basename(file)
         self.set_title(self.title)
@@ -321,6 +349,8 @@ class Text(tkinter.Text):
     """The text widget."""
 
     def __init__(self, *args, tabwidth=4, **kwargs):
+
+        # Configure all the keyword arguments to customize the widget
         kwargs["wrap"] = "none"
         kwargs["background"] = "#000000"
         kwargs["foreground"] = "#ffffff"
@@ -329,6 +359,8 @@ class Text(tkinter.Text):
         kwargs["selectforeground"] = "#000000"
         kwargs["font"] = "LiberationMono 10"
         kwargs["undo"] = True
+
+        # Initialize the widget and bind it's events
         tkinter.Text.__init__(self, *args, **kwargs)
         self.tabwidth = tabwidth
         self.bind("<Control-o>", self._event_handler)

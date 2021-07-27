@@ -193,23 +193,33 @@ class AppWindow(tkinter.Tk):
                 if menuitem is None:
                     menu.add_separator()
                 else:
+                    # Create a function for the menu item to call and bind it
                     def command(event=None, eventname=menuitem[1]):
                         self.event_generate(eventname)
                     self.bind(menuitem[3], command)
+
+                    # Set the underline for the menu item's label
                     menuitemlabel = menuitem[0].replace("_", "")
+
+                    # Add the menu item
                     menu.add_command(
                         label=menuitemlabel,
                         command=command,
                         underline=menuitem[0].index("_"),
                         accelerator=menuitem[2]
                     )
+
+            # Set the underline for the menu's label
             menulabel = m[0].replace("_", "")
+
+            # Add the menu
             self.menubar.add_cascade(
                 label=menulabel,
                 menu=menu,
                 underline=m[0].index("_")
             )
 
+        # Add the menubar to the window
         self.config(menu=self.menubar)
 
     def create_window(self):
@@ -254,12 +264,14 @@ class AppWindow(tkinter.Tk):
 
     def file_save(self, event=None):
         """Save the current file."""
+
+        # Get the current page and tab
         tab = self.get_current_notebook().get_current_tab()
         page = self.get_current_notebook().get_current_page()
+
+        # If the file does not exist, save as
         if not os.path.exists(page.file): 
-            response, file = widgets.filedialogs.Save(self).show()
-            if response:
-                self.save_file(tab, file)
+            self.save_file_as()
         else:
             self.save_file(tab, file)
 
@@ -275,18 +287,28 @@ class AppWindow(tkinter.Tk):
 
     def load_file(self, file):
         """Insert the contents of FILE into the text widget."""
+
+        # Load the contents of the file
         with open(file) as f:
             fcontents = f.read()
             f.close()
+
+        # Create a new Page instance and load the file to it
         page = widgets.Page(self.get_current_notebook().frame)
         page.load_string(fcontents, file)
         page.file = file
+
+        # Add the page to a new tab in the notebook
         self.get_current_notebook().add_page(page)
 
     def save_file(self, tab, file):
         """Save the contents of TAB's Text instance to FILE."""
+
+        # Write the contents of TAB's Page instance to the page's file
         with open(file, "w") as f:
             f.write(tab.child.text.get(1.0, END))
             f.close()
+
+        # Set the tab's file and label to the new file
         tab.file = file
         tab.set_text(os.path.basename(file))
