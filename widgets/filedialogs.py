@@ -62,6 +62,45 @@ class _FileDialog(tkinter.Toplevel):
         self.destroy()
         self.response = None
 
+    def _convert_dir_size(self, dirlist):
+        """Use the number of items in DIRLIST to tell whether to say "items" or
+        "item"."""
+        l = len(dirlist)
+        if l == 1:
+            s = "item"
+        else:
+            s = "items"
+        return "%s %s" % (l, s)
+
+    def _convert_size(self, size):
+        """Return a more human-readable size for SIZE (which must be in bytes)"""
+        
+        # The units list
+        units = ["bytes", "kB", "MB", "GB"]
+        
+        # The unit of size (an index of the units list)
+        unit = 0
+
+        # Continually divide the size by 1024 until it would be less than 0 in
+        # our current unit
+        while True:
+            if size / 1000 >= 1 and unit != 3:
+                size = size / 1000
+                unit += 1
+            else:
+                break
+        size = round(size, ndigits=1)
+
+        # Remove the decimal altogether if the number is whole
+        if ".0" in str(size):
+            size = int(size)
+
+        # Make sure that if we are using bytes, we use singular for a single byte
+        if size == 1 and units[unit] == "bytes":
+            units[unit] = "byte"
+        
+        return "%s %s" % (size, units[unit])
+
     def _create_buttons(self):
         """Create the buttons at the top of the dialog."""
 
@@ -257,7 +296,7 @@ class _FileDialog(tkinter.Toplevel):
                 END,
                 d + "/",
                 text=os.path.basename(d),
-                values=("", "%s" % time.ctime(os.path.getmtime(d))),
+                values=("%s" % self._convert_dir_size(os.listdir(d)), "%s" % time.ctime(os.path.getmtime(d))),
                 image=self.dir_image,
                 tags=("dir")
             )
@@ -269,7 +308,7 @@ class _FileDialog(tkinter.Toplevel):
                     END,
                     f + "/",
                     text=os.path.basename(f),
-                    values=("%s" % os.path.getsize(f), "%s" % time.ctime(os.path.getmtime(f))),
+                    values=("%s" % self._convert_size(os.path.getsize(f)), "%s" % time.ctime(os.path.getmtime(f))),
                     image=self.file_image,
                     tags=("file")
                 )
