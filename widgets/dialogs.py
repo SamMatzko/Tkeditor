@@ -17,25 +17,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA
 # or see <http://www.gnu.org/licenses/>
-"""Application constants."""
 
-import os
+"""Application-specific dialogs."""
 
-# The root path
-ROOT_PATH = os.path.dirname(__file__) + "/"
-
-# Json files
-JSON_APPINFO = ROOT_PATH + "data/appinfo.json"
-
-# Error messages for handling
-ERROR_CLOSE = """can't invoke "update" command: \
-application has been destroyed"""
-
-# Images
-IMAGE_BUTTON_PARENT_DIR = ROOT_PATH + "icons/application/parent_dir.png"
-IMAGE_DIRECTORY = ROOT_PATH + "icons/application/16x16directory.png"
-IMAGE_FILE = ROOT_PATH + "icons/application/16x16file.png"
-
-# Other file paths
-BOOKMARKS = os.environ["HOME"] + "/.config/gtk-3.0/bookmarks"
-USER_DIRS = os.environ["HOME"] + "/.config/user-dirs.dirs"
+pass

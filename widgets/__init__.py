@@ -1,4 +1,4 @@
-# TKEditor is a basic Python IDE
+# TKEditor is a basic text editor
 # Copyright (C) 2021  Samuel Matzko
 
 # This file is part of TKEditor.
