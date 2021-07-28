@@ -402,6 +402,7 @@ class Text(tkinter.Text):
         self.bind("<Control-a>", self._select_all)
         self.bind("<Control-Shift-Left>", self._ctrl_shift_left)
         self.bind("<Control-Shift-Right>", self._ctrl_shift_right)
+        self.bind("<Control-a>", self.select_all)
     
     def _ctrl_shift_left(self, event=None):
         self.control_shift_left_func()
@@ -438,6 +439,13 @@ class Text(tkinter.Text):
     def get_all(self):
         """Return all our text."""
         return self.get(1.0, END)
+
+    def select_all(self, event=None):
+        """Select all of the text."""
+        self.tag_add("sel", 1.0, "end-1c")
+        self.mark_set(INSERT, 1.0)
+        self.see(INSERT)
+        return "break"
 
     # Placeholders for unbound methods
 
