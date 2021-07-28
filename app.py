@@ -45,6 +45,11 @@ class App:
         # Create a new window
         self.windows.append(AppWindow(application=self, className="TKEditor"))
 
+        # Open all the files in the window
+        for a in argv[1:]:
+            if os.path.exists(a):
+                self.windows[len(self.windows) - 1].load_file(a)
+
         # Run the main loop
         self.main()
     
