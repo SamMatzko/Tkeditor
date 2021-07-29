@@ -28,8 +28,6 @@ import tkinter.messagebox
 from tkinter import ttk
 from tkinter.constants import *
 
-sys.path.append(os.path.dirname(os.path.dirname(__file__)))
-
 from constants import *
 
 class _FileDialog(tkinter.Toplevel):

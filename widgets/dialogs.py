@@ -20,4 +20,54 @@
 
 """Application-specific dialogs."""
 
-pass
+import json
+import tkinter
+from tkinter.constants import *
+
+from constants import *
+
+class AboutDialog(tkinter.Toplevel):
+    """A simple dialog showing simple info on TKEditor."""
+
+    def __init__(self, *args, className=None, **kwargs):
+        kwargs["class"] = className
+        tkinter.Toplevel.__init__(self, *args, **kwargs)
+        self.wm_geometry("300x200")
+        self.wm_title("About TKEditor")
+        self.wm_resizable(False, False)
+
+        # The app info
+        self.appinfo = json.load(open(JSON_APPINFO))
+
+        # The label for the icon
+        self.icon = tkinter.PhotoImage(master=self, file=IMAGE_APPLICATION)
+        self.icon = self.icon.subsample(2)
+        self.icon_label = tkinter.Label(self, image=self.icon)
+        self.icon_label.pack(expand=YES, fill=BOTH)
+
+        # The other labels
+        
+        self.name_label = tkinter.Label(
+            self,
+            text="TKEditor",
+            font="Default 20 bold",
+            justify=CENTER
+        )
+        self.name_label.pack(side=TOP, expand=YES, fill=BOTH)
+
+        self.version_label = tkinter.Label(self, text=self.appinfo["version"])
+        self.version_label.pack(side=TOP, expand=YES, fill=BOTH)
+
+        self.copyright_label = tkinter.Label(self, text=self.appinfo["copyright"])
+        self.copyright_label.pack(side=TOP, expand=YES, fill=BOTH)
+
+    def show(self):
+        """Show the dialog."""
+        self.mainloop()
+
+if __name__ == "__main__":
+    __name__ = 2
+    w = tkinter.Tk()
+    dialog = AboutDialog(tk, transientfor=w)
+    dialog.show()
+    exit()

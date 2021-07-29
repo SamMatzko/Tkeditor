@@ -32,6 +32,7 @@ ERROR_CLOSE = """can't invoke "update" command: \
 application has been destroyed"""
 
 # Images
+IMAGE_APPLICATION = ROOT_PATH + "icons/application/appicon256x256.png"
 IMAGE_BUTTON_PARENT_DIR = ROOT_PATH + "icons/application/parent_dir.png"
 IMAGE_DIRECTORY = ROOT_PATH + "icons/application/16x16directory.png"
 IMAGE_FILE = ROOT_PATH + "icons/application/16x16file.png"

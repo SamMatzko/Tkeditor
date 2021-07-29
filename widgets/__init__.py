@@ -21,9 +21,13 @@
 """Widgets for the application."""
 
 import os
+import sys
 import tkinter
 import tkinter.ttk
 from tkinter.constants import *
+
+# Add the main app directory to sys.path so we can import constants.py
+sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 
 class _NotebookTab(tkinter.LabelFrame):
     """The tab widget for the Notebook."""

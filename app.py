@@ -23,6 +23,7 @@ import tkinter
 from tkinter.constants import *
 
 import widgets
+import widgets.dialogs
 import widgets.filedialogs
 from constants import *
 
@@ -102,6 +103,11 @@ class AppWindow(tkinter.Tk):
                 (
                     ("_Undo", "<<undo-action>>", "Ctrl+Z", "<Control-z>"),
                     ("_Redo", "<<redo-action>>", "Control+Shift+Z", "<Control-Z>")
+                )
+            ),
+            ("_Help",
+                (
+                    ("_About", "<<about>>", "", ""),
                 )
             )
         )
@@ -200,7 +206,8 @@ class AppWindow(tkinter.Tk):
                     # Create a function for the menu item to call and bind it
                     def command(event=None, eventname=menuitem[1]):
                         self.event_generate(eventname)
-                    self.bind(menuitem[3], command)
+                    if menuitem[3] != "":
+                        self.bind(menuitem[3], command)
 
                     # Set the underline for the menu item's label
                     menuitemlabel = menuitem[0].replace("_", "")
@@ -255,6 +262,7 @@ class AppWindow(tkinter.Tk):
         self.bind("<<redo-action>>", self.action_redo)
         self.bind("<<tab-close>>", self.close_current_tab)
         self.bind("<<quit>>", self.close)
+        self.bind("<<about>>", self.show_about)
 
     def file_new(self, event=None):
         """Create a new file."""
@@ -316,3 +324,8 @@ class AppWindow(tkinter.Tk):
         # Set the tab's file and label to the new file
         tab.file = file
         tab.set_text(os.path.basename(file))
+
+    def show_about(self, event=None):
+        """Show the about dialog."""
+
+        dialog = widgets.dialogs.AboutDialog(self, className="TKEditor")
