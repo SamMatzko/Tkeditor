@@ -29,6 +29,8 @@ from tkinter.constants import *
 # Add the main app directory to sys.path so we can import constants.py
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 
+from . import syntax_highlighting
+
 class _NotebookTab(tkinter.LabelFrame):
     """The tab widget for the Notebook."""
 
@@ -287,9 +289,14 @@ class Page(tkinter.Frame):
         self.yscrollbar = tkinter.Scrollbar(self, orient=VERTICAL)
         self.yscrollbar.grid(row=0, column=2, sticky=NS)
 
+        # The line numbers widget
+        self.line_numbers = TextLineNumbers(self, width=10, height=1000)
+        self.line_numbers.grid(row=0, column=0, sticky=W)
+
         # The text widget
         self.text = Text(
             self,
+            line_numbers=self.line_numbers,
             xscrollcommand=self.xscrollbar.set,
             yscrollcommand=self.yscrollbar.set
         )
@@ -298,20 +305,12 @@ class Page(tkinter.Frame):
         self.xscrollbar.config(command=self.text.xview)
         self.yscrollbar.config(command=self.text.yview)
 
-        # The line numbers widget
-        self.line_numbers = TextLineNumbers(self, width=10, height=1000)
-        self.line_numbers.grid(row=0, column=0, sticky=W)
-        self.line_numbers.attach(self.text)
-
         self.columnconfigure(1, weight=1)
         self.rowconfigure(0, weight=1)
 
         # Bind the events
-        self.text.bind("<ButtonPress>", self.on_edit)
-        self.text.bind("<KeyPress>", self.on_edit)
         self.text.bind("<Control-z>", self.undo)
         self.text.bind("<Control-Z>", self.redo)
-        self.text.bind("<<edit>>", self.line_numbers.redraw)
 
         # The file we currently have open
         self.file = "Untitled"
@@ -337,10 +336,6 @@ class Page(tkinter.Frame):
         self.file = file
         self.title = os.path.basename(file)
         self.set_title(self.title)
-
-    def on_edit(self, event):
-        self.line_numbers.after(2, self.line_numbers.redraw)
-        self.text.event_generate("<<edit>>")
 
     def on_scroll_press(self, *args):
         self.yscrollbar.bind("<B1-Motion>", self.line_numbers.redraw)
@@ -386,7 +381,7 @@ class PanedWindow(tkinter.PanedWindow):
 class Text(tkinter.Text):
     """The text widget."""
 
-    def __init__(self, *args, tabwidth=4, **kwargs):
+    def __init__(self, *args, line_numbers, tabwidth=4, **kwargs):
 
         # Configure all the keyword arguments to customize the widget
         kwargs["wrap"] = "none"
@@ -407,6 +402,15 @@ class Text(tkinter.Text):
         self.bind("<Control-Shift-Left>", self._ctrl_shift_left)
         self.bind("<Control-Shift-Right>", self._ctrl_shift_right)
         self.bind("<Control-a>", self.select_all)
+        self.bind("<KeyPress>", self._on_key_press)
+        self.bind("<ButtonPress>", self._on_button_press)
+
+        # Our syntax highlighting manager
+        self.syntax = syntax_highlighting.Python(self)
+
+        # Our line numbers widget
+        self.line_numbers = line_numbers
+        self.line_numbers.attach(self)
     
     def _ctrl_shift_left(self, event=None):
         self.control_shift_left_func()
@@ -420,6 +424,14 @@ class Text(tkinter.Text):
         """Prevent the widget from creating a new line when Ctrl+O is hit."""
         self.control_o_func()
         return "break"
+
+    def _on_button_press(self, event=None):
+        """Update the line numbers and syntax highlighting."""
+        self.after(2, self.update_accessories)
+
+    def _on_key_press(self, event=None):
+        """Update the line numbers and syntax highlighting."""
+        self.after(2, self.update_accessories)
 
     def _on_tab(self, event):
         self.insert(INSERT, " " * self.tabwidth)
@@ -450,6 +462,11 @@ class Text(tkinter.Text):
         self.mark_set(INSERT, 1.0)
         self.see(INSERT)
         return "break"
+
+    def update_accessories(self, event=None):
+        """Update the syntax highlighting."""
+        self.syntax.update()
+        self.line_numbers.redraw()
 
     # Placeholders for unbound methods
 

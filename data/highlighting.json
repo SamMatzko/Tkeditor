@@ -1,0 +1,47 @@
+{
+    "colors":
+    {
+        "DarkBlue": "#5f8bda",
+        "LightBlue": "#9dd5ff",
+        "Turquoise": "#31d4b4",
+        "Green": "#71b468",
+        "Yellow": "#d7e7a7",
+        "Coral": "#cf926c",
+        "Purple": "#cc6abf"
+    },
+    "keywords":
+    {
+        "False": "DarkBlue",
+        "None": "DarkBlue",
+        "True": "DarkBlue",
+        "and": "DarkBlue",
+        "as": "DarkBlue",
+        "assert": "DarkBlue",
+        "break": "Purple",
+        "class": "DarkBlue",
+        "continue": "Purple",
+        "def": "DarkBlue",
+        "elif": "Purple",
+        "else": "Purple",
+        "except": "Purple",
+        "finally": "Purple",
+        "for": "Purple",
+        "from": "Purple",
+        "global": "DarkBlue",
+        "if": "Purple",
+        "import": "Purple",
+        "in": "DarkBlue",
+        "is": "DarkBlue",
+        "lambda": "DarkBlue",
+        "nonlocal": "DarkBlue",
+        "not": "DarkBlue",
+        "or": "DarkBlue",
+        "pass": "Purple",
+        "raise": "Purple",
+        "return": "Purple",
+        "try": "Purple",
+        "while": "Purple",
+        "with": "Purple",
+        "yield": "Purple"
+    }
+}

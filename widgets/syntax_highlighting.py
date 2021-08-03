@@ -17,27 +17,32 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA
 # or see <http://www.gnu.org/licenses/>
-"""Application constants."""
 
-import os
+import ast
+import json
+import tkinter
+from tkinter.constants import *
 
-# The root path
-ROOT_PATH = os.path.dirname(__file__) + "/"
+from constants import *
 
-# Json files
-JSON_APPINFO = ROOT_PATH + "data/appinfo.json"
-JSON_COLORS = ROOT_PATH + "data/highlighting.json"
+"""A class for syntax highlighting in a text widget."""
 
-# Error messages for handling
-ERROR_CLOSE = """can't invoke "update" command: \
-application has been destroyed"""
+class Python:
+    """Syntax highlighting for Python 3.X syntax."""
 
-# Images
-IMAGE_APPLICATION = ROOT_PATH + "icons/application/appicon256x256.png"
-IMAGE_BUTTON_PARENT_DIR = ROOT_PATH + "icons/application/parent_dir.png"
-IMAGE_DIRECTORY = ROOT_PATH + "icons/application/16x16directory.png"
-IMAGE_FILE = ROOT_PATH + "icons/application/16x16file.png"
+    def __init__(self, text):
+        
+        # Our text widget
+        self.text = text
 
-# Other file paths
-BOOKMARKS = os.environ["HOME"] + "/.config/gtk-3.0/bookmarks"
-USER_DIRS = os.environ["HOME"] + "/.config/user-dirs.dirs"
+        # Load the syntax file
+        self.syntax = json.load(open(JSON_COLORS))
+        self.colors = self.syntax["colors"]
+
+        # Set the tags for the text widget
+        for color in self.colors:
+            self.text.tag_config(color, foreground=self.colors[color])
+
+    def update(self):
+        """Update the highlighting."""
+        pass
