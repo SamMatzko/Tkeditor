@@ -43,6 +43,28 @@ class Python:
         for color in self.colors:
             self.text.tag_config(color, foreground=self.colors[color])
 
+    def _highlight_body(self, unit):
+        """Highlight all the items in the body of UNIT."""
+        
+        for i in unit.body:
+
+            # Set the text indexes for this body
+            start_index = "%s.%s" % (i.lineno, i.col_offset)
+            end_index = "%s.%s" % (i.end_lineno, i.end_col_offset)
+
+            # Check if the unit has a "body" attribute, and if so, call this
+            # method with that body
+            if "body" in i.__dict__:
+                self._highlight_body(i)
+            # Otherwise, highlight the unit
+            else:
+                print((i.lineno, i.col_offset), (i.end_lineno, i.end_col_offset))
+
     def update(self):
         """Update the highlighting."""
-        pass
+        
+        # Get the list of grammar syntax
+        # module = ast.parse(self.text.get_all())
+
+        # Highlight the syntax
+        # self._highlight_body(module)

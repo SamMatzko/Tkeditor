@@ -465,8 +465,8 @@ class Text(tkinter.Text):
 
     def update_accessories(self, event=None):
         """Update the syntax highlighting."""
-        self.syntax.update()
         self.line_numbers.redraw()
+        self.syntax.update()
 
     # Placeholders for unbound methods
 
