@@ -20,6 +20,7 @@
 
 """Widgets for the application."""
 
+import json
 import os
 import sys
 import tkinter
@@ -30,6 +31,7 @@ from tkinter.constants import *
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 
 from . import syntax_highlighting
+from constants import *
 
 class _NotebookTab(tkinter.LabelFrame):
     """The tab widget for the Notebook."""
@@ -276,6 +278,57 @@ class Notebook(tkinter.Frame):
     def control_o_func(self):
         return "break"
 
+class StatusBar(tkinter.Frame):
+    """The status widget at the bottom of the window."""
+
+    def __init__(self, *args, **kwargs):
+        kwargs["relief"] = RAISED
+        tkinter.Frame.__init__(self, *args, **kwargs)
+
+        # The application info
+        self.appinfo = json.load(open(JSON_APPINFO))
+
+        # The version label
+        self.version_label = tkinter.Label(self, text=self.appinfo["version"])
+        self.version_label.pack(side=RIGHT)
+
+        sep = tkinter.ttk.Separator(self, orient=VERTICAL)
+        sep.pack(padx=3, side=RIGHT, fill=Y)
+
+        # The line/column label
+        self.index_label = tkinter.Label(self, text="Ln: 1 Col: 0")
+        self.index_label.pack(side=RIGHT)
+
+        sep = tkinter.ttk.Separator(self, orient=VERTICAL)
+        sep.pack(padx=3, side=RIGHT, fill=Y)
+
+        # The tab size label
+        self.tab_size_label = tkinter.Label(
+            self,
+            text="Spaces: 4"
+        )
+        self.tab_size_label.bind("<Button-1>", self.set_tab_size)
+        self.tab_size_label.pack(side=RIGHT)
+
+    def bind_set_tab_size(self, func):
+        """Bind a click on the tab size label to a call of FUNC."""
+        self.set_tab_size_func = func
+
+    def set_tab_size(self, event=None):
+        """Set the tab size."""
+        tabsize = self.set_tab_size_func()
+        self.tab_size_label.config(text="Spaces: %s" % tabsize)
+
+    def update_index_label(self, line, column):
+        """Update the index label."""
+        label = "Ln: %s Col: %s" % (line, column)
+        self.index_label.config(text=label)
+
+    # Placeholders for unbound methods
+
+    def set_tab_size_func(self):
+        pass
+
 class Page(tkinter.Frame):
     """The frame containing all the text field's widgets."""
 
@@ -300,10 +353,16 @@ class Page(tkinter.Frame):
             xscrollcommand=self.xscrollbar.set,
             yscrollcommand=self.yscrollbar.set
         )
+        self.text.bind_update(self.update_accessories)
         self.text.grid(row=0, column=1, sticky=NSEW)
 
         self.xscrollbar.config(command=self.text.xview)
         self.yscrollbar.config(command=self.text.yview)
+
+        # The status bar
+        self.status_bar = StatusBar(self)
+        self.status_bar.bind_set_tab_size(self.set_tab_size)
+        self.status_bar.grid(row=2, column=0, columnspan=3, sticky=EW)
 
         self.columnconfigure(1, weight=1)
         self.rowconfigure(0, weight=1)
@@ -352,6 +411,18 @@ class Page(tkinter.Frame):
         self.after(2, self.line_numbers.redraw())
         return "break"
 
+    def set_tab_size(self):
+        """Get the tab size and set it."""
+
+        # Show the popover for the tab size
+        tab_size = SetTabSizePopover(
+            self.text,
+            initialsize=self.text.tabwidth,
+        ).show()
+        self.text.focus_set()
+        self.text.set_tab_width(tab_size)
+        return tab_size
+
     def undo(self, event=None):
         """Undo the last action."""
         try:
@@ -360,6 +431,11 @@ class Page(tkinter.Frame):
             pass
         self.after(2, self.line_numbers.redraw())
         return "break"
+
+    def update_accessories(self):
+        """Update all our accessories, like the status bar."""
+        line, col = self.text.index(INSERT).split(".")
+        self.status_bar.update_index_label(line, col)
 
     # Placeholders for unbound methods
     def set_title(self, title):
@@ -377,6 +453,102 @@ class PanedWindow(tkinter.PanedWindow):
         """Add a notebook in a new pane."""
         self.add(notebook) 
         self.notebooks.append(notebook)
+
+class _Popover(tkinter.Frame):
+    """The popover for the tab size."""
+
+    def __init__(self, *args, **kwargs):
+        kwargs["cursor"] = "arrow"
+        tkinter.Frame.__init__(self, *args, **kwargs)
+        self.focus_force()
+
+        self.bind("<FocusOut>", self.close)
+        self.bind("<Key-Escape>", self.close)
+
+        self.end = False
+
+    def close(self, event=None):
+        """Close the popover."""
+        self.destroy()
+        self.end = True
+
+    def show(self):
+        """Show the popover."""
+        while True:
+            if not self.end:
+                self.update()
+            else:
+                break
+
+class SetTabSizePopover(_Popover):
+    """The popover for the tab size."""
+
+    def __init__(self, *args, initialsize, **kwargs):
+        _Popover.__init__(self, *args, **kwargs)
+        self.focus_force()
+
+        self.bind("<FocusOut>", self.close)
+        self.bind("<Key-Escape>", self.close)
+
+        self.end = False
+
+        # The tab size
+        self.tabsize = initialsize
+
+        # Create the widgets
+        self._create_window()
+
+        self.grid(row=0, column=0, sticky=N)
+
+    def _create_window(self):
+        """Create the window."""
+        
+        # The label
+        self.label = tkinter.Label(
+            self,
+            text="Select indentation size (in spaces)"
+        )
+        self.label.grid(row=0, column=0, sticky=NW)
+
+        # The buttons
+        self.size_two_button = tkinter.Button(
+            self,
+            text="2",
+            relief=FLAT,
+            command=lambda: self.set_size(size=2)
+        )
+        self.size_two_button.grid(row=1, column=0, sticky=EW)
+
+        self.size_four_button = tkinter.Button(
+            self,
+            text="4",
+            relief=FLAT,
+            command=lambda: self.set_size(size=4)
+        )
+        self.size_four_button.grid(row=2, column=0, sticky=EW)
+
+        self.size_eight_button = tkinter.Button(
+            self,
+            text="8",
+            relief=FLAT,
+            command=lambda: self.set_size(size=8)
+        )
+        self.size_eight_button.grid(row=3, column=0, sticky=EW)
+
+        self.columnconfigure(0, weight=1)
+
+    def set_size(self, *args, size):
+        self.tabsize = size
+        self.close()
+
+    def show(self):
+        """Show the popover."""
+        while True:
+            if not self.end:
+                self.update()
+            else:
+                break
+        return self.tabsize
 
 class Text(tkinter.Text):
     """The text widget."""
@@ -404,6 +576,9 @@ class Text(tkinter.Text):
         self.bind("<Control-a>", self.select_all)
         self.bind("<KeyPress>", self._on_key_press)
         self.bind("<ButtonPress>", self._on_button_press)
+
+        self.columnconfigure(0, weight=1)
+        self.rowconfigure(0, weight=1)
 
         # Our syntax highlighting manager
         self.syntax = syntax_highlighting.Python(self)
@@ -435,6 +610,7 @@ class Text(tkinter.Text):
 
     def _on_tab(self, event):
         self.insert(INSERT, " " * self.tabwidth)
+        self.update_accessories()
         return "break"
 
     def _select_all(self, event):
@@ -452,6 +628,10 @@ class Text(tkinter.Text):
         """Bind \<Control-Shift-Right\> to a call of FUNC."""
         self.control_shift_right_func = func
 
+    def bind_update(self, func):
+        """Bind a call of self.update_accessories to a call of FUNC."""
+        self.update_accessories_func = func
+
     def get_all(self):
         """Return all our text."""
         return self.get(1.0, END)
@@ -463,10 +643,15 @@ class Text(tkinter.Text):
         self.see(INSERT)
         return "break"
 
+    def set_tab_width(self, width):
+        """Set the tab width to WIDTH."""
+        self.tabwidth = width
+
     def update_accessories(self, event=None):
         """Update the syntax highlighting."""
         self.line_numbers.redraw()
         self.syntax.update()
+        self.update_accessories_func()
 
     # Placeholders for unbound methods
 
@@ -477,6 +662,9 @@ class Text(tkinter.Text):
         pass
     
     def control_shift_right_func(self, event=None):
+        pass
+
+    def update_accessories_func(self):
         pass
 
 class TextLineNumbers(tkinter.Canvas):
