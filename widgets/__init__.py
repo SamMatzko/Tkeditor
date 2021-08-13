@@ -370,6 +370,7 @@ class Page(tkinter.Frame):
         # Bind the events
         self.text.bind("<Control-z>", self.undo)
         self.text.bind("<Control-Z>", self.redo)
+        self.yscrollbar.bind("<Button-1>", self.on_scroll_press)
 
         # The file we currently have open
         self.file = "Untitled"
