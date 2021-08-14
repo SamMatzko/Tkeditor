@@ -283,7 +283,7 @@ class AppWindow(tkinter.Tk):
 
         # If the file does not exist, save as
         if not os.path.exists(page.file): 
-            self.save_file_as()
+            self.file_save_as()
         else:
             self.save_file(tab, file)
 
