@@ -569,14 +569,14 @@ class Text(tkinter.Text):
         # Initialize the widget and bind it's events
         tkinter.Text.__init__(self, *args, **kwargs)
         self.tabwidth = tabwidth
-        self.bind("<Control-o>", self._event_handler)
-        self.bind("<Key-Tab>", self._on_tab)
+        self.bind("<ButtonPress>", self._on_button_press)
         self.bind("<Control-a>", self._select_all)
+        self.bind("<Control-K>", self._delete_current_line)
+        self.bind("<Control-o>", self._event_handler)
         self.bind("<Control-Shift-Left>", self._ctrl_shift_left)
         self.bind("<Control-Shift-Right>", self._ctrl_shift_right)
-        self.bind("<Control-a>", self.select_all)
         self.bind("<KeyPress>", self._on_key_press)
-        self.bind("<ButtonPress>", self._on_button_press)
+        self.bind("<Key-Tab>", self._on_tab)
 
         self.columnconfigure(0, weight=1)
         self.rowconfigure(0, weight=1)
@@ -595,6 +595,18 @@ class Text(tkinter.Text):
     def _ctrl_shift_right(self, event=None):
         self.control_shift_right_func()
         return "break"
+
+    def _delete_current_line(self, event=None):
+        """Delete the line where the cursor is."""
+        i = self.index(INSERT)
+        ilist = i.split(".")
+        line_start = ilist[0] + ".0"
+        line_end = ilist[0] + ".end"
+
+        # Insert a separator in the undo stack, so that the user can undo the
+        # line deletion all by itself
+        self.edit_separator()
+        self.delete(line_start, line_end)
         
     def _event_handler(self, event):
         """Prevent the widget from creating a new line when Ctrl+O is hit."""
@@ -614,8 +626,12 @@ class Text(tkinter.Text):
         self.update_accessories()
         return "break"
 
-    def _select_all(self, event):
-        pass
+    def _select_all(self, event=None):
+        """Select all of the text."""
+        self.tag_add("sel", 1.0, "end-1c")
+        self.mark_set(INSERT, 1.0)
+        self.see(INSERT)
+        return "break"
 
     def bind_control_o(self, func):
         """Bind \<Control-o\> to a call of FUNC."""
@@ -636,13 +652,6 @@ class Text(tkinter.Text):
     def get_all(self):
         """Return all our text."""
         return self.get(1.0, END)
-
-    def select_all(self, event=None):
-        """Select all of the text."""
-        self.tag_add("sel", 1.0, "end-1c")
-        self.mark_set(INSERT, 1.0)
-        self.see(INSERT)
-        return "break"
 
     def set_tab_width(self, width):
         """Set the tab width to WIDTH."""
