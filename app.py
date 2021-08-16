@@ -94,6 +94,7 @@ class AppWindow(tkinter.Tk):
                     ("_Save File", "<<save-file>>", "Ctrl+S", "<Control-s>"),
                     ("Save File _As", "<<save-file-as>>", "Ctrl+Shift+Z", "<Control-S>"),
                     None,
+                    ("_Reload Current File", "<<file-reload>>", "Ctrl+R", "<Control-r>"),
                     ("Close Current _Tab", "<<tab-close>>", "Ctrl+W", "<Control-w>"),
                     None,
                     ("_Quit", "<<quit>>", "Ctrl+Q", "<Control-q>")
@@ -260,6 +261,7 @@ class AppWindow(tkinter.Tk):
         self.bind("<<save-file-as>>", self.file_save_as)
         self.bind("<<undo-action>>", self.action_undo)
         self.bind("<<redo-action>>", self.action_redo)
+        self.bind("<<file-reload>>", self.reload_file)
         self.bind("<<tab-close>>", self.close_current_tab)
         self.bind("<<quit>>", self.close)
         self.bind("<<about>>", self.show_about)
@@ -313,6 +315,19 @@ class AppWindow(tkinter.Tk):
         # Add the page to a new tab in the notebook
         self.get_current_notebook().add_page(page)
 
+    def reload_file(self, event=None):
+        """Reload the contents of the currently open file and redisplay them in
+        the text widget."""
+
+        # Load the contents of the file
+        with open(self.get_current_notebook().get_current_page().file) as f:
+            fcontents = f.read()
+            f.close()
+
+        # Reinsert the text
+        text = self.get_current_notebook().get_current_page().text
+        text.replace(1.0, END, fcontents)
+
     def save_file(self, tab, file):
         """Save the contents of TAB's Text instance to FILE."""
 
@@ -323,6 +338,7 @@ class AppWindow(tkinter.Tk):
 
         # Set the tab's file and label to the new file
         tab.file = file
+        tab.child.file = file
         tab.set_text(os.path.basename(file))
 
     def show_about(self, event=None):
