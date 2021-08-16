@@ -285,7 +285,7 @@ class AppWindow(tkinter.Tk):
         if not os.path.exists(page.file): 
             self.file_save_as()
         else:
-            self.save_file(tab, file)
+            self.save_file(tab, page.file)
 
     def file_save_as(self, event=None):
         """Save the current file under a different name."""

@@ -249,6 +249,19 @@ class _FileDialog(tkinter.Toplevel):
                     "No file was selected.",
                     parent=self
                 )
+        elif self.askoverwrite:
+            response = tkinter.messagebox.askyesno(
+                "Replace File?",
+                'File "%s" already exists. Replacing it will overwrite it!' % (
+                    os.path.basename(self.current_file)
+                ),
+                parent=self
+            )
+            if response == True:
+                self.response = True
+                self.destroy()
+            else:
+                pass
         else:
             self.response = True
             self.destroy()
@@ -371,7 +384,7 @@ class Save(_FileDialog):
 class SaveAs(_FileDialog):
     """Save a file under a different name."""
 
-    def __init__(self, *args, title="Save As", initialdir=os.environ["HOME"] + "/", askoverwrite=True, confirmexsists=True, showhidden=True, **kwargs):
+    def __init__(self, *args, title="Save As", initialdir=os.environ["HOME"] + "/", askoverwrite=True, confirmexsists=False, showhidden=True, **kwargs):
         _FileDialog.__init__(
             self,
             *args,
