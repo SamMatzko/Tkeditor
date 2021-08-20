@@ -569,6 +569,8 @@ class Text(tkinter.Text):
         # Initialize the widget and bind it's events
         tkinter.Text.__init__(self, *args, **kwargs)
         self.tabwidth = tabwidth
+        self.bind("<Alt-Down>", self._move_line_down)
+        self.bind("<Alt-Up>", self._move_line_up)
         self.bind("<ButtonPress>", self._on_button_press)
         self.bind("<Control-a>", self._select_all)
         self.bind("<Control-K>", self._delete_current_line)
@@ -601,7 +603,7 @@ class Text(tkinter.Text):
         i = self.index(INSERT)
         ilist = i.split(".")
         line_start = ilist[0] + ".0"
-        line_end = ilist[0] + ".end"
+        line_end = ilist[0] + ".end+1c"
 
         # Insert a separator in the undo stack, so that the user can undo the
         # line deletion all by itself
@@ -612,6 +614,68 @@ class Text(tkinter.Text):
         """Prevent the widget from creating a new line when Ctrl+O is hit."""
         self.control_o_func()
         return "break"
+
+    def _get_line_above(self, index):
+        """Return a tuple of start and end indexes for the line above INDEX.
+        Return False if the line is line 1."""
+        index = str(index)
+        ilist = index.split(".")
+        if ilist[0] == "1":
+            return False
+        else:
+            return self._get_line_start_end(str(int(ilist[0]) - 1) + ".0")
+
+    def _get_line_below(self, index):
+        """Return a tuple of start and end indexes for the line below INDEX."""
+        index = str(index)
+        ilist = index.split(".")
+        return self._get_line_start_end(str(int(ilist[0]) + 1) + ".0")
+
+    def _get_line_last(self):
+        """Return the start index for the last line."""
+        return self._get_line_start_end(
+            float(self.index(END)) - 1.0
+        )[0]
+        
+    def _get_line_start_end(self, index):
+        """Return the start and end indexes for the line at INDEX."""
+        index = str(index)
+        ilist = index.split(".")
+        return ilist[0] + ".0", ilist[0] + ".end"
+
+    def _move_line_down(self, event=None):
+        """Swap the places of the current line and the one below it."""
+        i = self.index(INSERT)
+        ilist = i.split(".")
+
+        # Make sure we can actually move up (that is, the current line is not
+        # the first)
+        if int(ilist[0]) < float(self._get_line_last()):
+            
+            # Get the contents of this line and the line above it
+            current_contents = self.get(*self._get_line_start_end(i))
+            above_contents = self.get(*self._get_line_below(i))
+
+            # Replace the lines
+            self.replace(*self._get_line_start_end(i), above_contents)
+            self.replace(*self._get_line_below(i), current_contents)
+
+    def _move_line_up(self, event=None):
+        """Swap the places of the current line and the one above it."""
+        i = self.index(INSERT)
+        ilist = i.split(".")
+
+        # Make sure we can actually move up (that is, the current line is not
+        # the first)
+        if int(ilist[0]) > 1:
+            
+            # Get the contents of this line and the line above it
+            current_contents = self.get(*self._get_line_start_end(i))
+            above_contents = self.get(*self._get_line_above(i))
+
+            # Replace the lines
+            self.replace(*self._get_line_start_end(i), above_contents)
+            self.replace(*self._get_line_above(i), current_contents)
 
     def _on_button_press(self, event=None):
         """Update the line numbers and syntax highlighting."""
