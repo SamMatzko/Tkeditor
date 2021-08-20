@@ -20,4 +20,4 @@
 
 # This runs install.py
 SCRIPT_PATH=$( cd $(dirname $0) ; pwd )/
-python3 "${SCRIPT_PATH}"install.py -u
+python3 "${SCRIPT_PATH}"/install.py -u

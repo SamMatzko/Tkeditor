@@ -1,3 +1,4 @@
 *__pycache__/*
 /widgets/__pycache__/*
 /language_server/*
+/data/*.desktop
