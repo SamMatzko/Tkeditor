@@ -575,6 +575,8 @@ class Text(tkinter.Text):
         self.bind("<Control-a>", self._select_all)
         self.bind("<Control-K>", self._delete_current_line)
         self.bind("<Control-o>", self._event_handler)
+        self.bind("<Control-Key-bracketright>", self._line_indent)
+        self.bind("<Control-Key-bracketleft>", self._line_unindent)
         self.bind("<Control-Shift-Left>", self._ctrl_shift_left)
         self.bind("<Control-Shift-Right>", self._ctrl_shift_right)
         self.bind("<KeyPress>", self._on_key_press)
@@ -642,6 +644,28 @@ class Text(tkinter.Text):
         index = str(index)
         ilist = index.split(".")
         return ilist[0] + ".0", ilist[0] + ".end"
+
+    def _line_indent(self, event=None):
+        """Indent the current line."""
+        start, end = self._get_line_start_end(self.index(INSERT))
+        self.edit_separator()
+        self.insert(start, " " * self.tabwidth)
+        self.edit_separator()
+        self.update_accessories()
+
+    def _line_unindent(self, event=None):
+        """Unindent the current line."""
+        start, end = self._get_line_start_end(self.index(INSERT))
+
+        # Check if the line is indented at all
+        line = self.get(start, end)
+        if line.startswith(" " * self.tabwidth):
+            line = line[self.tabwidth:]
+        
+        self.edit_separator()
+        self.replace(start, end, line)
+        self.edit_separator()
+        self.update_accessories()
 
     def _move_line_down(self, event=None):
         """Swap the places of the current line and the one below it."""
