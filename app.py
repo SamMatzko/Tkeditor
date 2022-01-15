@@ -116,7 +116,11 @@ class AppWindow(tkinter.Tk):
         # Create the window
         self.create_window()
 
-        self.wm_geometry("2000x2000")
+        # Set the theme
+        # self.tk.call("source", "/home/sam/Sun-Valley-ttk-theme/sun-valley.tcl")
+        # self.tk.call("set_theme", "dark")
+
+        self.wm_attributes("-zoomed", True)
 
     def action_undo(self, event=None):
         """Undo the last action."""
